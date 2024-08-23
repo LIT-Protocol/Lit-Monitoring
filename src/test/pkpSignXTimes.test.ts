@@ -1,10 +1,11 @@
-import { testPkpSign } from "../src/pkpSign";
+import { testPkpSign } from "../pkpSign";
 import { LitNetwork } from "@lit-protocol/constants";
 
-const timestamp = new Date().toISOString().replace(/:/g, "-");
+// const timestamp = new Date().toISOString().replace(/:/g, "-");
 
 const LIT_NETWORK = LitNetwork.DatilDev;
-const ETHEREUM_PRIVATE_KEY = import.meta.env.ETHEREUM_PRIVATE_KEY as string;
+const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY as string;
+
 // const TOTAL_RUNS = 10000;
 // const PARALLEL_RUNS = 20;
 // const DELAY_BETWEEN_TESTS = 1500; // 1.5 seconds in milliseconds

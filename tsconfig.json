@@ -19,7 +19,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "test/main.test.ts", "extra/get-eoa-session-sigs.ts", "extra/refcode.ts", "extra/tinny-environment.ts"],
+  // "include": ["src", "test/main.test.ts", "extra/get-eoa-session-sigs.ts", "extra/refcode.ts", "extra/tinny-environment.ts"],
   "typeAcquisition": {
     "include": ["jest"]
   }
