@@ -1,4 +1,4 @@
-import { testPkpSign } from "../pkpSign";
+import { executeJs } from "../executeJs";
 import { LitNetwork } from "@lit-protocol/constants";
 import * as fs from "fs";
 import * as path from "path";
@@ -7,9 +7,9 @@ const timestamp = new Date().toISOString().replace(/:/g, "-");
 
 const LIT_NETWORK = LitNetwork.DatilDev;
 const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY as string;
-const TOTAL_RUNS = 1;
-const PARALLEL_RUNS = 1;
-const DELAY_BETWEEN_TESTS = 1500; // 1.5 seconds
+const TOTAL_RUNS = 3;
+const PARALLEL_RUNS = 10;
+const DELAY_BETWEEN_TESTS = 1000; // 1 second
 const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-pkp-sign-test-log-${timestamp}.log`;
 
 test("pkpSign batch testing", async () => {
@@ -38,29 +38,27 @@ test("pkpSign batch testing", async () => {
         try {
             const startTime = Date.now();
 
-            const runPkpSign = await testPkpSign(
+            const runPkpSign = await executeJs(
                 ETHEREUM_PRIVATE_KEY,
                 LIT_NETWORK
             );
 
             // -- assertions
-            if (!runPkpSign.r) {
-                throw new Error(`Expected "r" in runWithSessionSigs`);
+            if (!runPkpSign.signatures) {
+                throw new Error(
+                    "Signatures not found, expecting signature in response"
+                );
             }
-            if (!runPkpSign.s) {
-                throw new Error(`Expected "s" in runWithSessionSigs`);
+            const sig = runPkpSign.signatures.sig;
+            console.log("signature returned as a response", sig);
+            if (!sig.r) {
+                throw new Error("invalid signature returned from lit action");
             }
-            if (!runPkpSign.dataSigned) {
-                throw new Error(`Expected "dataSigned" in runWithSessionSigs`);
+            if (!sig.s) {
+                throw new Error("invalid signature returned from lit action");
             }
-            if (!runPkpSign.publicKey) {
-                throw new Error(`Expected "publicKey" in runWithSessionSigs`);
-            }
-            if (!runPkpSign.signature.startsWith("0x")) {
-                throw new Error(`Expected "signature" to start with 0x`);
-            }
-            if (isNaN(runPkpSign.recid)) {
-                throw new Error(`Expected "recid" to be parseable as a number`);
+            if (sig.recid === undefined) {
+                throw new Error("invalid signature returned from lit action");
             }
 
             const endTime = Date.now();

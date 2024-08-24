@@ -10,7 +10,7 @@ import {
 } from "@lit-protocol/auth-helpers";
 import { ethers } from "ethers";
 
-export async function testPkpSign(_privateKey: string, _network: LitNetwork) {
+export async function executeJs(_privateKey: string, _network: LitNetwork) {
     const litNodeClient = new LitNodeClient({
         litNetwork: _network,
     });
@@ -21,17 +21,29 @@ export async function testPkpSign(_privateKey: string, _network: LitNetwork) {
 
     await litNodeClient.connect();
 
-    const results = await litNodeClient.pkpSign({
-        toSign: [
-            84, 104, 105, 115, 32, 109, 101, 115, 115, 97, 103, 101, 32, 105,
-            115, 32, 101, 120, 97, 99, 116, 108, 121, 32, 51, 50, 32, 98, 121,
-            116, 101, 115,
-        ],
-        pubKey: pkp.publicKey,
+    const litAction = 
+    `(async () => {
+        const sigShare = await LitActions.signEcdsa({
+            toSign: dataToSign,
+            publicKey,
+            sigName: "sig",
+        });
+    })();`;
+
+    const results = await litNodeClient.executeJs({
+        code: litAction,
         sessionSigs: sessionSigs,
+        jsParams: {
+            publicKey: pkp.publicKey,
+            dataToSign: [
+                84, 104, 105, 115, 32, 109, 101, 115, 115, 97, 103, 101, 32, 105,
+                115, 32, 101, 120, 97, 99, 116, 108, 121, 32, 51, 50, 32, 98, 121,
+                116, 101, 115,
+            ],
+        },
     });
 
-    console.log("pkpSign results: ", results);
+    console.log("executeJs results: ", results);
     return results;
 }
 
