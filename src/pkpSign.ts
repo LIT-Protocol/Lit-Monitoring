@@ -1,4 +1,5 @@
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
+import { LitContracts } from "@lit-protocol/contracts-sdk";
 import { LitAbility } from "@lit-protocol/types";
 import { LitNetwork } from "@lit-protocol/constants";
 import {
@@ -12,42 +13,63 @@ import { ethers } from "ethers";
 export async function testPkpSign(_privateKey: string, _network: LitNetwork) {
     const litNodeClient = new LitNodeClient({
         litNetwork: _network,
-        debug: true,
     });
 
     const signer = await getWallet(_privateKey);
-    const sessionSigs = await sessionSigEOA(signer, litNodeClient);
+    const pkp = await mintPKP(signer, _network);
+    const sessionSigs = await sessionSigEOA(signer, _network);
 
     await litNodeClient.connect();
 
-    // let pubKey = ""
+    const res = await litNodeClient.pkpSign({
+        toSign: [
+            84, 104, 105, 115, 32, 109, 101, 115, 115, 97, 103, 101, 32, 105,
+            115, 32, 101, 120, 97, 99, 116, 108, 121, 32, 51, 50, 32, 98, 121,
+            116, 101, 115,
+        ],
+        pubKey: pkp.publicKey,
+        sessionSigs: sessionSigs,
+    });
 
-    // await litNodeClient.pkpSign({
-    //     toSign: [84, 104, 105, 115, 32, 109, 101, 115, 115, 97, 103, 101, 32, 105, 115, 32, 101, 120, 97, 99, 116, 108, 121, 32, 51, 50, 32, 98, 121, 116, 101, 115],
-    //     pubKey: pubKey,
-    //     sessionSigs: sessionSigs
-    // })
-    
-    console.log(sessionSigs)
+    console.log("pkp sign", res);
+    return res;
 }
 
 async function getWallet(_privateKey: string) {
     const provider = new ethers.providers.JsonRpcProvider(
         `https://yellowstone-rpc.litprotocol.com/`
     );
-    const wallet = new ethers.Wallet(
-        _privateKey,
-        provider
-    );
+
+    const wallet = new ethers.Wallet(_privateKey, provider);
+
     return wallet;
 }
 
-export async function sessionSigEOA(_signer: ethers.Wallet, _litNodeClient: LitNodeClient) {
-    console.log("creating session sigs..");
+export async function mintPKP(_signer: ethers.Wallet, _network: LitNetwork) {
+    const litContracts = new LitContracts({
+        signer: _signer,
+        network: _network,
+        debug: false,
+    });
 
-    await _litNodeClient.connect();
+    await litContracts.connect();
 
-    const sessionSigs = await _litNodeClient.getSessionSigs({
+    const mintedPkp = await litContracts.pkpNftContractUtils.write.mint();
+
+    return mintedPkp.pkp;
+}
+
+export async function sessionSigEOA(
+    _signer: ethers.Wallet,
+    _network: LitNetwork
+) {
+    const litNodeClient = new LitNodeClient({
+        litNetwork: _network,
+    });
+
+    await litNodeClient.connect();
+
+    const sessionSigs = await litNodeClient.getSessionSigs({
         chain: "ethereum",
         resourceAbilityRequests: [
             {
@@ -75,8 +97,8 @@ export async function sessionSigEOA(_signer: ethers.Wallet, _litNodeClient: LitN
                 ).toISOString(), // 24 hours,
                 resources: params.resourceAbilityRequests,
                 walletAddress: await _signer.getAddress(),
-                nonce: await _litNodeClient.getLatestBlockhash(),
-                litNodeClient: _litNodeClient,
+                nonce: await litNodeClient.getLatestBlockhash(),
+                litNodeClient: litNodeClient,
                 domain: "localhost:3000",
             });
 
@@ -87,6 +109,5 @@ export async function sessionSigEOA(_signer: ethers.Wallet, _litNodeClient: LitN
         },
     });
 
-    console.log("sessionSigs: ", sessionSigs);
     return sessionSigs;
 }
