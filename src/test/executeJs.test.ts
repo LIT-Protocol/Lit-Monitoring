@@ -8,12 +8,14 @@ const timestamp = new Date().toISOString().replace(/:/g, "-");
 
 const LIT_NETWORK = LitNetwork.DatilDev;
 const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY as string;
-const TOTAL_RUNS = 1;
+const TOTAL_RUNS = 3;
 const PARALLEL_RUNS = 1;
 const DELAY_BETWEEN_TESTS = 1000; // 1 second
 const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-execute-js-test-log-${timestamp}.log`;
 
 test("executeJs batch testing", async () => {
+    const startTimeTotal = Date.now();
+
     const dir = path.dirname(LOG_FILE_PATH);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -129,6 +131,8 @@ test("executeJs batch testing", async () => {
     const successfulRuns = results.filter((r) => r.status === "success");
     const failedRuns = results.filter((r) => r.status === "error");
 
+    const endTimeTotal = Date.now();
+
     const summary = {
         type: "test_summary",
         uuid: `${uuid}`,
@@ -137,6 +141,8 @@ test("executeJs batch testing", async () => {
         totalRuns: TOTAL_RUNS,
         successfulRuns: successfulRuns.length,
         failedRuns: failedRuns.length,
+        startTimeTotal: `${startTimeTotal}`,
+        endTimeTotal: `${endTimeTotal}`,
         averageDuration:
             successfulRuns.length > 0
                 ? successfulRuns.reduce((sum, r) => sum + r.duration, 0) /
