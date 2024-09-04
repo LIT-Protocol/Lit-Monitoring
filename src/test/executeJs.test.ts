@@ -1,5 +1,6 @@
 import { executeJs } from "../executeJs";
 import { LitNetwork } from "@lit-protocol/constants";
+import { v4 as uuidv4 } from 'uuid';
 import * as fs from "fs";
 import * as path from "path";
 
@@ -7,17 +8,19 @@ const timestamp = new Date().toISOString().replace(/:/g, "-");
 
 const LIT_NETWORK = LitNetwork.DatilDev;
 const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY as string;
-const TOTAL_RUNS = 3;
-const PARALLEL_RUNS = 10;
+const TOTAL_RUNS = 1;
+const PARALLEL_RUNS = 1;
 const DELAY_BETWEEN_TESTS = 1000; // 1 second
-const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-pkp-sign-test-log-${timestamp}.log`;
+const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-execute-js-test-log-${timestamp}.log`;
 
-test("pkpSign batch testing", async () => {
+test("executeJs batch testing", async () => {
     const dir = path.dirname(LOG_FILE_PATH);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
     fs.writeFileSync(LOG_FILE_PATH, "");
+
+    const uuid = uuidv4();
 
     const log = (entry: any) => {
         const logEntry = JSON.stringify({
@@ -29,27 +32,33 @@ test("pkpSign batch testing", async () => {
     };
 
     log({
-        message: `Starting testPkpSign on network ${LIT_NETWORK} with ${TOTAL_RUNS} total runs, ${PARALLEL_RUNS} in parallel, ${DELAY_BETWEEN_TESTS}ms delay between tests`,
+        type: "test_start",
+        uuid: `${uuid}`,
+        test: "executeJs",
+        lit_network: `${LIT_NETWORK}`,
+        total_runs: `${TOTAL_RUNS}`,
+        parallel_runs: `${PARALLEL_RUNS}`,
+        delay_between_tests: `${DELAY_BETWEEN_TESTS}`,
+        log_file_path: `${LOG_FILE_PATH}`
     });
 
-    log({ message: `Logging to file: ${LOG_FILE_PATH}` });
 
     const runTest = async (index: number) => {
         try {
             const startTime = Date.now();
 
-            const runPkpSign = await executeJs(
+            const executeJsRes = await executeJs(
                 ETHEREUM_PRIVATE_KEY,
                 LIT_NETWORK
             );
 
             // -- assertions
-            if (!runPkpSign.signatures) {
+            if (!executeJsRes.signatures) {
                 throw new Error(
                     "Signatures not found, expecting signature in response"
                 );
             }
-            const sig = runPkpSign.signatures.sig;
+            const sig = executeJsRes.signatures.sig;
             console.log("signature returned as a response", sig);
             if (!sig.r) {
                 throw new Error("invalid signature returned from lit action");
@@ -66,11 +75,13 @@ test("pkpSign batch testing", async () => {
 
             const result = {
                 type: "test_result",
+                status: "success",
                 index: index + 1,
                 totalRuns: TOTAL_RUNS,
-                status: "success",
+                startTime: `${startTime}`,
+                endTime: `${endTime}`,
                 duration,
-                ...runPkpSign,
+                response: executeJsRes,
             };
 
             log(result);
@@ -120,6 +131,7 @@ test("pkpSign batch testing", async () => {
 
     const summary = {
         type: "test_summary",
+        uuid: `${uuid}`,
         status: "test_completed",
         LIT_NETWORK,
         totalRuns: TOTAL_RUNS,

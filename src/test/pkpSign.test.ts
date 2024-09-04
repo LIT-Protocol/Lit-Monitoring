@@ -1,5 +1,6 @@
 import { testPkpSign } from "../pkpSign";
 import { LitNetwork } from "@lit-protocol/constants";
+import { v4 as uuidv4 } from 'uuid';
 import * as fs from "fs";
 import * as path from "path";
 
@@ -19,6 +20,8 @@ test("pkpSign batch testing", async () => {
     }
     fs.writeFileSync(LOG_FILE_PATH, "");
 
+    const uuid = uuidv4();
+
     const log = (entry: any) => {
         const logEntry = JSON.stringify({
             timestamp: new Date().toISOString(),
@@ -29,37 +32,42 @@ test("pkpSign batch testing", async () => {
     };
 
     log({
-        message: `Starting testPkpSign on network ${LIT_NETWORK} with ${TOTAL_RUNS} total runs, ${PARALLEL_RUNS} in parallel, ${DELAY_BETWEEN_TESTS}ms delay between tests`,
+        type: "test_start",
+        uuid: `${uuid}`,
+        test: "pkpSign",
+        lit_network: `${LIT_NETWORK}`,
+        total_runs: `${TOTAL_RUNS}`,
+        parallel_runs: `${PARALLEL_RUNS}`,
+        delay_between_tests: `${DELAY_BETWEEN_TESTS}`,
+        log_file_path: `${LOG_FILE_PATH}`
     });
-
-    log({ message: `Logging to file: ${LOG_FILE_PATH}` });
 
     const runTest = async (index: number) => {
         try {
             const startTime = Date.now();
 
-            const runPkpSign = await testPkpSign(
+            const pkpSignRes = await testPkpSign(
                 ETHEREUM_PRIVATE_KEY,
                 LIT_NETWORK
             );
 
             // -- assertions
-            if (!runPkpSign.r) {
+            if (!pkpSignRes.r) {
                 throw new Error(`Expected "r" in runWithSessionSigs`);
             }
-            if (!runPkpSign.s) {
+            if (!pkpSignRes.s) {
                 throw new Error(`Expected "s" in runWithSessionSigs`);
             }
-            if (!runPkpSign.dataSigned) {
+            if (!pkpSignRes.dataSigned) {
                 throw new Error(`Expected "dataSigned" in runWithSessionSigs`);
             }
-            if (!runPkpSign.publicKey) {
+            if (!pkpSignRes.publicKey) {
                 throw new Error(`Expected "publicKey" in runWithSessionSigs`);
             }
-            if (!runPkpSign.signature.startsWith("0x")) {
+            if (!pkpSignRes.signature.startsWith("0x")) {
                 throw new Error(`Expected "signature" to start with 0x`);
             }
-            if (isNaN(runPkpSign.recid)) {
+            if (isNaN(pkpSignRes.recid)) {
                 throw new Error(`Expected "recid" to be parseable as a number`);
             }
 
@@ -68,11 +76,13 @@ test("pkpSign batch testing", async () => {
 
             const result = {
                 type: "test_result",
+                status: "success",
                 index: index + 1,
                 totalRuns: TOTAL_RUNS,
-                status: "success",
+                startTime: `${startTime}`,
+                endTime: `${endTime}`,
                 duration,
-                ...runPkpSign,
+                response: pkpSignRes,
             };
 
             log(result);
@@ -122,6 +132,7 @@ test("pkpSign batch testing", async () => {
 
     const summary = {
         type: "test_summary",
+        uuid: `${uuid}`,
         status: "test_completed",
         LIT_NETWORK,
         totalRuns: TOTAL_RUNS,
