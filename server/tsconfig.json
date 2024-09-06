@@ -16,8 +16,9 @@
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    // "noUnusedParameters": false
   },
   // "include": ["src", "test/main.test.ts", "extra/get-eoa-session-sigs.ts", "extra/refcode.ts", "extra/tinny-environment.ts"],
   "typeAcquisition": {
