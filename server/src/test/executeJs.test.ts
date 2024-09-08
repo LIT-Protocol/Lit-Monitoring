@@ -36,7 +36,7 @@ test("executeJs batch testing", async () => {
     log({
         type: "test_start",
         uuid: `${uuid}`,
-        test: "executeJs",
+        test_function: "executeJs",
         lit_network: `${LIT_NETWORK}`,
         total_runs: `${TOTAL_RUNS}`,
         parallel_runs: `${PARALLEL_RUNS}`,

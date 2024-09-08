@@ -32,6 +32,8 @@ interface LogFile {
     path: string;
     network: string;
     timestamp: string;
+    test_function: string;
+    averageDuration: number;
 }
 
 function categorizeNetwork(filename: string): string {
@@ -80,6 +82,42 @@ function parseLogContent(content: string): NetworkStats {
     return results;
 }
 
+function extractTestFunction(filePath: string): string {
+    const content = fs.readFileSync(filePath, "utf-8");
+    const lines = content.split("\n").filter((line) => line.trim());
+
+    for (const line of lines) {
+        try {
+            const parsed = JSON.parse(line);
+            if (parsed.type === "test_start" && parsed.test_function) {
+                return parsed.test_function;
+            }
+        } catch (error) {
+            continue;
+        }
+    }
+
+    return "unknown";
+}
+
+function extractAverageDuration(filePath: string): number {
+    const content = fs.readFileSync(filePath, "utf-8");
+    const lines = content.split("\n").filter((line) => line.trim());
+
+    for (const line of lines) {
+        try {
+            const parsed = JSON.parse(line);
+            if (parsed.type === "test_summary" && parsed.averageDuration) {
+                return parsed.averageDuration;
+            }
+        } catch (error) {
+            continue;
+        }
+    }
+
+    return 0;
+}
+
 app.get("/logs", (req, res) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 7;
@@ -95,27 +133,29 @@ app.get("/logs", (req, res) => {
             .map((file) => {
                 const filePath = path.join(logDirectory, file);
                 const stats = fs.statSync(filePath);
+                const testFunction = extractTestFunction(filePath);
+                const averageDuration = extractAverageDuration(filePath);
+
                 return {
                     name: file,
                     path: filePath,
                     network: categorizeNetwork(file),
                     timestamp: stats.mtime.toISOString(),
+                    test_function: testFunction,
+                    averageDuration: averageDuration,
                 };
             });
 
-        // Filter by network if specified
         if (network !== "all") {
             logFiles = logFiles.filter((file) => file.network === network);
         }
 
-        // Sort by timestamp (latest first)
         logFiles.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
 
         const totalItems = logFiles.length;
         const totalPages = Math.ceil(totalItems / limit);
         const offset = (page - 1) * limit;
 
-        // Apply pagination
         const paginatedFiles = logFiles.slice(offset, offset + limit);
 
         res.json({
@@ -153,32 +193,25 @@ app.get("/network-stats", (req, res) => {
 
         const networkStats: { [key: string]: NetworkStats } = {};
 
-        files
-            .filter((file) => file.endsWith(".log"))
-            .forEach((file) => {
-                const network = categorizeNetwork(file);
-                const filePath = path.join(logDirectory, file);
-                const content = fs.readFileSync(filePath, "utf8");
-                const stats = parseLogContent(content);
+        files.filter((file) => file.endsWith(".log")).forEach((file) => {
+            const network = categorizeNetwork(file);
+            const filePath = path.join(logDirectory, file);
+            const content = fs.readFileSync(filePath, "utf8");
+            const stats = parseLogContent(content);
 
-                if (!networkStats[network]) {
-                    networkStats[network] = { ...stats };
-                } else {
-                    networkStats[network].success += stats.success;
-                    networkStats[network].failure += stats.failure;
-                    networkStats[network].totalDuration += stats.totalDuration;
-                    networkStats[network].totalRuns += stats.totalRuns;
-                    if (
-                        stats.latestTimestamp >
-                        networkStats[network].latestTimestamp
-                    ) {
-                        networkStats[network].latestTimestamp =
-                            stats.latestTimestamp;
-                    }
+            if (!networkStats[network]) {
+                networkStats[network] = { ...stats };
+            } else {
+                networkStats[network].success += stats.success;
+                networkStats[network].failure += stats.failure;
+                networkStats[network].totalDuration += stats.totalDuration;
+                networkStats[network].totalRuns += stats.totalRuns;
+                if (stats.latestTimestamp > networkStats[network].latestTimestamp) {
+                    networkStats[network].latestTimestamp = stats.latestTimestamp;
                 }
-            });
+            }
+        });
 
-        // Calculate success and failure rates for each network
         Object.keys(networkStats).forEach((network) => {
             const stats = networkStats[network];
             stats.successRate = stats.totalRuns
