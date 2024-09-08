@@ -1,13 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Chart, Bar } from "react-chartjs-2";
+import { Bar } from "react-chartjs-2";
 import "chart.js/auto";
 
 interface Log {
     name: string;
     network: string;
     timestamp: string;
+    test_function: string;
+    averageDuration: number;
     success: number;
     failure: number;
     totalDuration: number;
@@ -136,13 +138,15 @@ export default function Home() {
             <h2 className="text-xl font-semibold mt-8 mb-4">
                 Individual Log Files
             </h2>
-            <table className="w-full border-collapse border border-black">
+            <table className="w-full border-collapse border border-black text-sm">
                 <thead>
                     <tr className="bg-gray-200">
-                        <th className="border border-black p-2">File Name</th>
+                        {/* <th className="border border-black p-2">File Name</th> */}
+                        <th className="border border-black p-2">Test Type</th>
                         <th className="border border-black p-2">Network</th>
                         <th className="border border-black p-2">Timestamp</th>
                         <th className="border border-black p-2">Actions</th>
+                        <th className="border border-black p-2">Avg Duration</th>
                         <th className="border border-black p-2">Success</th>
                         <th className="border border-black p-2">Failures</th>
                         <th className="border border-black p-2">
@@ -157,10 +161,11 @@ export default function Home() {
                     </tr>
                 </thead>
                 <tbody>
-                    {logs.map((log) => (
-                        <tr key={log.name} className="hover:bg-gray-50">
+                    {logs.map((log, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
                             <td className="border border-black p-2">
-                                {log.name}
+                                {/* {log.name} */}
+                                <td>{log.test_function}</td>
                             </td>
                             <td className="border border-black p-2">
                                 {log.network}
@@ -176,6 +181,9 @@ export default function Home() {
                                 >
                                     Download
                                 </a>
+                            </td>
+                            <td className="border border-black p-2">
+                                {log.averageDuration}
                             </td>
                             <td className="border border-black p-2">
                                 {log.success}
@@ -220,7 +228,7 @@ export default function Home() {
             <h2 className="text-xl font-semibold mt-8 mb-4">
                 Network Statistics
             </h2>
-            <table className="w-full border-collapse border border-black">
+            <table className="w-full border-collapse border border-black text-sm">
                 <thead>
                     <tr className="bg-gray-200">
                         <th className="border border-black p-2">Network</th>
@@ -269,8 +277,10 @@ export default function Home() {
                 </tbody>
             </table>
 
-            <div className="chart-container mt-8">
-                <Bar data={chartData} />
+            <div className="chart-container mt-8 flex justify-center">
+                <div className="w-[70%]">
+                    <Bar data={chartData} options={{ maintainAspectRatio: true }} />
+                </div>
             </div>
         </div>
     );
