@@ -11,7 +11,7 @@ const LIT_NETWORK = LitNetwork.DatilDev;
 const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY as string;
 const TOTAL_RUNS = 500;
 const PARALLEL_RUNS = 50;
-const DELAY_BETWEEN_TESTS = 1000; // 1 second
+const DELAY_BETWEEN_TESTS = 300; // 0.3 seconds
 const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-pkp-mint-test-log-${timestamp}.log`;
 const FUNDING_AMOUNT = 6000000000000000;
 
