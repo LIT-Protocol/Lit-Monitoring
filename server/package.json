@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "jest",
     "test pkpSign": "jest -- pkpSign.test.ts",
-    "test executeJs": "jest -- executeJs.test.ts"
+    "test executeJs": "jest -- executeJs.test.ts",
+    "test pkpMint": "jest -- pkpMint.test.ts"
   },
   "dependencies": {
     "@lit-protocol/auth-helpers": "^6.4.6",
