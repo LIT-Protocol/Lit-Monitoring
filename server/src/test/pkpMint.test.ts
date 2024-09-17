@@ -8,9 +8,9 @@ import { ethers } from "ethers";
 const timestamp = new Date().toISOString().replace(/:/g, "-");
 
 const LIT_NETWORK = LitNetwork.DatilDev;
-const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY as string;
-const TOTAL_RUNS = 150;
-const PARALLEL_RUNS = 150;
+const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY_1 as string;
+const TOTAL_RUNS = 200;
+const PARALLEL_RUNS = 400;
 const DELAY_BETWEEN_TESTS = 0; // in ms
 const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-pkp-mint-test-log-${timestamp}.log`;
 const FUNDING_AMOUNT = 6000000000000000;

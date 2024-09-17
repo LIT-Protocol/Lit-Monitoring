@@ -27,16 +27,29 @@ export async function pkpMintAndAddAuthMethod(
     let accessToken2 =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1dWlkIjoiMGIyNDIwYTctYzBmNy00YTlmLWFlN2UtMGMyODA5NDU3M2FjIiwiZW1haWwiOiJkNzRwMmIyNHpsQHNteWt3Yi5jb20iLCJpYXQiOjE3MjU3MTAxMDgsImV4cCI6MTcyNjMxNDkwOH0.k7oWdFfpVzvDS-psFXBYZGTIbJdbCUt-KuFOGFx_yr8";
 
+    const formattedAccessToken2 = ethers.utils.keccak256(
+        ethers.utils.toUtf8Bytes(accessToken2)
+    );
+
     const tx =
         await litContracts.pkpHelperContract.write.mintNextAndAddAuthMethods(
             2, // keyType
-            [authMethodType1, authMethodType2], // permittedAuthMethodTypes
+            [
+                authMethodType1,
+                authMethodType2
+            ], // permittedAuthMethodTypes
             [
                 `0x${Buffer.from(bs58.decode(accessToken1)).toString("hex")}`,
-                accessToken2,
+                formattedAccessToken2,
             ], // permittedAuthMethodIds
-            ["0x", "0x"], // permittedAuthMethodPubkeys
-            [[AuthMethodScope.SignAnything, AuthMethodScope.SignAnything]], // permittedAuthMethodScopes
+            [
+                "0x", 
+                "0x"
+            ], // permittedAuthMethodPubkeys
+            [
+                [AuthMethodScope.SignAnything], 
+                [AuthMethodScope.SignAnything]
+            ], // permittedAuthMethodScopes
             false, // addPkpEthAddressAsPermittedAddress
             true, // sendPkpToItself
             {
