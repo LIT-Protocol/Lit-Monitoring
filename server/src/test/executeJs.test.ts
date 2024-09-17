@@ -181,6 +181,7 @@ test("executeJs batch testing", async () => {
         failedRuns: failedRuns.length,
         startTimeTotal: `${startTimeTotal}`,
         endTimeTotal: `${endTimeTotal}`,
+        totalDuration: endTimeTotal - startTimeTotal,
         averageDuration:
             successfulRuns.length > 0
                 ? successfulRuns.reduce((sum, r) => sum + r.duration, 0) /

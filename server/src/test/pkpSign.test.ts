@@ -177,12 +177,17 @@ test("pkpSign batch testing", async () => {
         type: "test_summary",
         uuid: `${uuid}`,
         status: "test_completed",
-        LIT_NETWORK,
         totalRuns: TOTAL_RUNS,
+        test_function: "pkpSign",
+        lit_network: `${LIT_NETWORK}`,
+        total_runs: `${TOTAL_RUNS}`,
+        parallel_runs: `${PARALLEL_RUNS}`,
+        delay_between_tests: `${DELAY_BETWEEN_TESTS}`,
         successfulRuns: successfulRuns.length,
         failedRuns: failedRuns.length,
         startTimeTotal: `${startTimeTotal}`,
         endTimeTotal: `${endTimeTotal}`,
+        totalDuration: endTimeTotal - startTimeTotal,
         averageDuration:
             successfulRuns.length > 0
                 ? successfulRuns.reduce((sum, r) => sum + r.duration, 0) /

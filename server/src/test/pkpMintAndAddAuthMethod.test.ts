@@ -1,4 +1,4 @@
-import { pkpMint } from "../pkpMint";
+import { pkpMintAndAddAuthMethod } from "../pkpMintAndAddAuthMethod";
 import { LitNetwork, LIT_RPC } from "@lit-protocol/constants";
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from "fs";
@@ -9,13 +9,13 @@ const timestamp = new Date().toISOString().replace(/:/g, "-");
 
 const LIT_NETWORK = LitNetwork.DatilDev;
 const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY as string;
-const TOTAL_RUNS = 150;
-const PARALLEL_RUNS = 150;
+const TOTAL_RUNS = 1;
+const PARALLEL_RUNS = 1;
 const DELAY_BETWEEN_TESTS = 0; // in ms
-const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-pkp-mint-test-log-${timestamp}.log`;
+const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-pkp-mint-and-add-auth-method-test-log-${timestamp}.log`;
 const FUNDING_AMOUNT = 6000000000000000;
 
-test("pkpMint batch testing", async () => {
+test("pkpMintAndAddAuthMethod batch testing", async () => {
     const dir = path.dirname(LOG_FILE_PATH);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -71,7 +71,7 @@ test("pkpMint batch testing", async () => {
     log({
         type: "test_start",
         uuid: `${uuid}`,
-        test_function: "pkpMint",
+        test_function: "pkpMintAndAddAuthMethod",
         lit_network: `${LIT_NETWORK}`,
         total_runs: `${TOTAL_RUNS}`,
         parallel_runs: `${PARALLEL_RUNS}`,
@@ -87,13 +87,13 @@ test("pkpMint batch testing", async () => {
 
             const startTime = Date.now();
             
-            const pkpMintRes = await pkpMint(
+            const pkpMintAndAddAuthRes = await pkpMintAndAddAuthMethod(
                 wallet,
                 LIT_NETWORK
             );
 
             // -- assertions
-            if (!pkpMintRes.publicKey) {
+            if (!pkpMintAndAddAuthRes.publicKey) {
                 throw new Error(
                     "Public key not found, expecting public key in response"
                 );
@@ -110,7 +110,7 @@ test("pkpMint batch testing", async () => {
                 startTime: `${startTime}`,
                 endTime: `${endTime}`,
                 duration,
-                response: pkpMintRes,
+                response: pkpMintAndAddAuthRes,
             };
 
             log(result);
@@ -165,7 +165,7 @@ test("pkpMint batch testing", async () => {
         uuid: `${uuid}`,
         status: "test_completed",
         totalRuns: TOTAL_RUNS,
-        test_function: "pkpMint",
+        test_function: "pkpMintAndAddAuthMethod",
         lit_network: `${LIT_NETWORK}`,
         total_runs: `${TOTAL_RUNS}`,
         parallel_runs: `${PARALLEL_RUNS}`,

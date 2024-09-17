@@ -10,11 +10,13 @@
     "test": "jest",
     "test pkpSign": "jest -- pkpSign.test.ts",
     "test executeJs": "jest -- executeJs.test.ts",
-    "test pkpMint": "jest -- pkpMint.test.ts"
+    "test pkpMint": "jest -- pkpMint.test.ts",
+    "test pkpMintAndAddAuthMethod": "jest -- pkpMintAndAddAuthMethod.test.ts"
   },
   "dependencies": {
     "@lit-protocol/auth-helpers": "^6.4.6",
     "@lit-protocol/lit-node-client": "^6.4.6",
+    "bs58": "^6.0.0",
     "cors": "^2.8.5",
     "ethers": "^5.7.2",
     "express": "^4.19.2",
