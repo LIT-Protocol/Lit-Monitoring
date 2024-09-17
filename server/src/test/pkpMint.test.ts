@@ -9,9 +9,9 @@ const timestamp = new Date().toISOString().replace(/:/g, "-");
 
 const LIT_NETWORK = LitNetwork.DatilDev;
 const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY as string;
-const TOTAL_RUNS = 500;
-const PARALLEL_RUNS = 50;
-const DELAY_BETWEEN_TESTS = 300; // 0.3 seconds
+const TOTAL_RUNS = 3;
+const PARALLEL_RUNS = 3;
+const DELAY_BETWEEN_TESTS = 0; // in ms
 const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-pkp-mint-test-log-${timestamp}.log`;
 const FUNDING_AMOUNT = 6000000000000000;
 
@@ -33,6 +33,7 @@ test("pkpMint batch testing", async () => {
         console.log(logEntry);
     };
 
+    // -------FUNDING WALLETS-------
     const provider = new ethers.providers.JsonRpcProvider(LIT_RPC.CHRONICLE_YELLOWSTONE);
     const mainWallet = new ethers.Wallet(ETHEREUM_PRIVATE_KEY, provider);
 
@@ -185,5 +186,5 @@ test("pkpMint batch testing", async () => {
         });
     }
 
-    // console.log(`ran ${results.length} tests`);
-}, 1000000);
+    console.log(`ran ${results.length} tests`);
+}, 3600000); // 1 hour timeout

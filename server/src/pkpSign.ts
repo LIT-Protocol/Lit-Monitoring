@@ -10,14 +10,13 @@ import {
 } from "@lit-protocol/auth-helpers";
 import { ethers } from "ethers";
 
-export async function testPkpSign(_privateKey: string, _network: LitNetwork) {
+export async function testPkpSign(_wallet: ethers.Wallet, _network: LitNetwork) {
     const litNodeClient = new LitNodeClient({
         litNetwork: _network,
     });
 
-    const signer = await getWallet(_privateKey);
-    const pkp = await mintPKP(signer, _network);
-    const sessionSigs = await sessionSigEOA(signer, _network);
+    const pkp = await mintPKP(_wallet, _network);
+    const sessionSigs = await sessionSigEOA(_wallet, _network);
 
     await litNodeClient.connect();
 
@@ -31,25 +30,17 @@ export async function testPkpSign(_privateKey: string, _network: LitNetwork) {
         sessionSigs: sessionSigs,
     });
 
+    await litNodeClient.disconnect()
+
     console.log("pkpSign results: ", results);
     return results;
 }
 
-async function getWallet(_privateKey: string) {
-    const provider = new ethers.providers.JsonRpcProvider(
-        `https://yellowstone-rpc.litprotocol.com/`
-    );
-
-    const wallet = new ethers.Wallet(_privateKey, provider);
-
-    return wallet;
-}
-
 export async function mintPKP(_signer: ethers.Wallet, _network: LitNetwork) {
+    
     const litContracts = new LitContracts({
         signer: _signer,
         network: _network,
-        debug: false,
     });
 
     await litContracts.connect();
@@ -108,6 +99,8 @@ export async function sessionSigEOA(
             });
         },
     });
+
+    await litNodeClient.disconnect()
 
     return sessionSigs;
 }

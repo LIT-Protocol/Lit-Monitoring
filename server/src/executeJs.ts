@@ -42,6 +42,8 @@ export async function executeJs(_wallet: ethers.Wallet, _network: LitNetwork) {
         },
     });
 
+    await litNodeClient.disconnect()
+
     console.log("executeJs results: ", results);
     return results;
 }
@@ -109,6 +111,8 @@ export async function sessionSigEOA(
             });
         },
     });
+
+    await litNodeClient.disconnect()
 
     return sessionSigs;
 }
