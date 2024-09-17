@@ -1,4 +1,4 @@
-import { executeJs } from "../executeJs";
+import { pkpMint } from "../pkpMint";
 import { LitNetwork, LIT_RPC } from "@lit-protocol/constants";
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from "fs";
@@ -9,14 +9,13 @@ const timestamp = new Date().toISOString().replace(/:/g, "-");
 
 const LIT_NETWORK = LitNetwork.DatilDev;
 const ETHEREUM_PRIVATE_KEY = process.env.ETHEREUM_PRIVATE_KEY as string;
-const TOTAL_RUNS = 3;
-const PARALLEL_RUNS = 1;
-const DELAY_BETWEEN_TESTS = 1000; // 1 second
-const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-execute-js-test-log-${timestamp}.log`;
+const TOTAL_RUNS = 500;
+const PARALLEL_RUNS = 50;
+const DELAY_BETWEEN_TESTS = 300; // 0.3 seconds
+const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-pkp-mint-test-log-${timestamp}.log`;
 const FUNDING_AMOUNT = 6000000000000000;
 
-test("executeJs batch testing", async () => {
-
+test("pkpMint batch testing", async () => {
     const dir = path.dirname(LOG_FILE_PATH);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
@@ -71,7 +70,7 @@ test("executeJs batch testing", async () => {
     log({
         type: "test_start",
         uuid: `${uuid}`,
-        test_function: "executeJs",
+        test_function: "pkpMint",
         lit_network: `${LIT_NETWORK}`,
         total_runs: `${TOTAL_RUNS}`,
         parallel_runs: `${PARALLEL_RUNS}`,
@@ -84,31 +83,21 @@ test("executeJs batch testing", async () => {
 
     const runTest = async (index: number, wallet: ethers.Wallet) => {
         try {
-            const startTime = Date.now();
 
-            const executeJsRes = await executeJs(
+            const startTime = Date.now();
+            
+            const pkpMintRes = await pkpMint(
                 wallet,
                 LIT_NETWORK
             );
 
             // -- assertions
-            if (!executeJsRes.signatures) {
+            if (!pkpMintRes.publicKey) {
                 throw new Error(
-                    "Signatures not found, expecting signature in response"
+                    "Public key not found, expecting public key in response"
                 );
             }
-            const sig = executeJsRes.signatures.sig;
-            // console.log("signature returned as a response", sig);
-            if (!sig.r) {
-                throw new Error("invalid signature returned from lit action");
-            }
-            if (!sig.s) {
-                throw new Error("invalid signature returned from lit action");
-            }
-            if (sig.recid === undefined) {
-                throw new Error("invalid signature returned from lit action");
-            }
-
+            
             const endTime = Date.now();
             const duration = endTime - startTime;
 
@@ -120,7 +109,7 @@ test("executeJs batch testing", async () => {
                 startTime: `${startTime}`,
                 endTime: `${endTime}`,
                 duration,
-                response: executeJsRes,
+                response: pkpMintRes,
             };
 
             log(result);

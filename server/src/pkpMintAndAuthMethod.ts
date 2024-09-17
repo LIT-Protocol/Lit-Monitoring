@@ -1,0 +1,18 @@
+import { LitNetwork } from "@lit-protocol/constants";
+import { LitContracts } from "@lit-protocol/contracts-sdk";
+import { ethers } from "ethers";
+
+export async function pkpMint(_wallet: ethers.Wallet, _network: LitNetwork) {
+
+    const litContracts = new LitContracts({
+        signer: _wallet,
+        network: _network,
+        debug: false,
+    });
+
+    await litContracts.connect();
+
+    const mintedPkp = await litContracts.pkpHelperContract.write.mintNextAndAddAuthMethods();
+
+    return mintedPkp.pkp;
+}
