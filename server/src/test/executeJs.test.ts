@@ -1,8 +1,9 @@
 import { executeJs } from "../executeJs";
-import { LitNetwork } from "@lit-protocol/constants";
+import { LitNetwork, LIT_RPC } from "@lit-protocol/constants";
 import { v4 as uuidv4 } from 'uuid';
 import * as fs from "fs";
 import * as path from "path";
+import { ethers } from "ethers";
 
 const timestamp = new Date().toISOString().replace(/:/g, "-");
 
@@ -12,9 +13,9 @@ const TOTAL_RUNS = 3;
 const PARALLEL_RUNS = 1;
 const DELAY_BETWEEN_TESTS = 1000; // 1 second
 const LOG_FILE_PATH = `./logs/${LIT_NETWORK}-execute-js-test-log-${timestamp}.log`;
+const FUNDING_AMOUNT = 6000000000000000;
 
 test("executeJs batch testing", async () => {
-    const startTimeTotal = Date.now();
 
     const dir = path.dirname(LOG_FILE_PATH);
     if (!fs.existsSync(dir)) {
@@ -33,6 +34,40 @@ test("executeJs batch testing", async () => {
         console.log(logEntry);
     };
 
+    const provider = new ethers.providers.JsonRpcProvider(LIT_RPC.CHRONICLE_YELLOWSTONE);
+    const mainWallet = new ethers.Wallet(ETHEREUM_PRIVATE_KEY, provider);
+
+    const testWallets: ethers.Wallet[] = [];
+
+    for (let i = 0; i < TOTAL_RUNS; i++) {
+        const newWallet = ethers.Wallet.createRandom().connect(provider);
+        testWallets.push(newWallet);
+
+        try {
+            const tx = await mainWallet.sendTransaction({
+                to: newWallet.address,
+                value: FUNDING_AMOUNT,
+            });
+            await tx.wait();
+    
+            log({
+                type: "wallet_funded",
+                index: i + 1,
+                address: newWallet.address,
+                txHash: tx.hash,
+            });
+        } catch (error) {
+            log({
+                type: "error_wallet_funded",
+                index: i + 1,
+                address: newWallet.address,
+                error: error,
+            });
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
     log({
         type: "test_start",
         uuid: `${uuid}`,
@@ -44,13 +79,15 @@ test("executeJs batch testing", async () => {
         log_file_path: `${LOG_FILE_PATH}`
     });
 
+    // -------START TESTS-------
+    const startTimeTotal = Date.now();
 
-    const runTest = async (index: number) => {
+    const runTest = async (index: number, wallet: ethers.Wallet) => {
         try {
             const startTime = Date.now();
 
             const executeJsRes = await executeJs(
-                ETHEREUM_PRIVATE_KEY,
+                wallet,
                 LIT_NETWORK
             );
 
@@ -61,7 +98,7 @@ test("executeJs batch testing", async () => {
                 );
             }
             const sig = executeJsRes.signatures.sig;
-            console.log("signature returned as a response", sig);
+            // console.log("signature returned as a response", sig);
             if (!sig.r) {
                 throw new Error("invalid signature returned from lit action");
             }
@@ -119,7 +156,7 @@ test("executeJs batch testing", async () => {
             .map((_, index) => {
                 return new Promise((resolve) => {
                     setTimeout(async () => {
-                        resolve(runTest(i + index));
+                        resolve(runTest(i + index, testWallets[i + index]));
                     }, index * DELAY_BETWEEN_TESTS);
                 });
             });
@@ -159,5 +196,5 @@ test("executeJs batch testing", async () => {
         });
     }
 
-    console.log(`ran ${results.length} tests`);
-}, 200000);
+    // console.log(`ran ${results.length} tests`);
+}, 1000000);
